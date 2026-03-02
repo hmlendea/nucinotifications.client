@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>NuciNotifications.Client</RootNamespace>
+    <Version>1.0.0</Version>
+    <Description>NuciNotifications client library</Description>
+    <Authors>Horațiu Mlendea</Authors>
+    <Copyright>Copyright 2026 © Horațiu Mlendea</Copyright>
+    <RepositoryUrl>https://github.com/hmlendea/nucinotifications.Client</RepositoryUrl>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+    <PackageTags>REST API</PackageTags>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuciAPI.Client" Version="1.0.0" />
+  </ItemGroup>
+
+</Project>
