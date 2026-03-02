@@ -15,7 +15,7 @@ namespace NuciNotifications.Client
     public class NuciNotificationsClient(
         NuciNotificationsSettings settings) : INuciNotificationsClient
     {
-        NuciApiClient apiClient = new(settings.BaseUrl);
+        readonly NuciApiClient apiClient = new(settings.BaseUrl);
 
         /// <summary>
         /// Sends an email notification request.
