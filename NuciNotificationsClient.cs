@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
@@ -50,18 +51,27 @@ namespace NuciNotifications.Client
                 HmacSharedSecretKey = settings.HmacSharedSecretKey
             };
 
-            NuciApiResponse response =
-                await apiClient.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
-                    HttpMethod.Post,
-                    new SendEmailRequest()
-                    {
-                        Sender = senderName,
-                        Recipient = recipient,
-                        Subject = subject,
-                        Body = body
-                    },
-                    authorisationInfo,
-                    "/Email");
+            NuciApiResponse response;
+
+            try
+            {
+                response =
+                    await apiClient.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
+                        HttpMethod.Post,
+                        new SendEmailRequest()
+                        {
+                            Sender = senderName,
+                            Recipient = recipient,
+                            Subject = subject,
+                            Body = body
+                        },
+                        authorisationInfo,
+                        "/Email");
+            }
+            catch (Exception ex)
+            {
+                throw new SmtpException("Error while sending the e-mail notification.", ex);
+            }
 
             if (!response.IsSuccessful)
             {
