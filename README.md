@@ -4,7 +4,7 @@
 
 ## About
 
-NuciNotifications.Client is a lightweight .NET client library for sending notifications through the NuciNotifications API.
+NuciNotifications.Client is a lightweight .NET client library for sending notifications through the [NuciNotifications API](https://github.com/hmlendea/nucinotifications-api).
 
 It currently exposes an `INuciNotificationsClient` abstraction with asynchronous email sending methods and supports authenticated requests using:
 - Bearer token authentication (`ApiKey`)
@@ -103,6 +103,11 @@ services.AddNuciNotificationsSettings(configuration);
 	- `Subject` is required.
 	- `Body` is required.
 - `Sender` is optional.
+
+## Related Projects
+
+- [NuciNotifications API](https://github.com/hmlendea/nucinotifications-api) for the server API
+- [NuciNotifications Client](https://github.com/hmlendea/nucinotifications.client) for the client NuGet package
 
 ## Target Framework
 
