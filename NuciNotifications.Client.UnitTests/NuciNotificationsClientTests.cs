@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -36,7 +37,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenValidParameters_WhenSendEmailWithoutSenderName_ThenCallsApiClientWithCorrectRequest()
     {
-        var response = new NuciApiSuccessResponse { IsSuccessful = true, Code = "200", Message = "OK" };
+        var response = new NuciApiSuccessResponse("OK") { Code = "200" };
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.Is<SendEmailRequest>(r => r.Recipient == "test@example.com" && r.Subject == "Test Subject" && r.Body == "Test Body" && r.Sender == null),
@@ -56,7 +57,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenValidParameters_WhenSendEmailWithSenderName_ThenCallsApiClientWithCorrectRequest()
     {
-        var response = new NuciApiSuccessResponse { IsSuccessful = true, Code = "200", Message = "OK" };
+        var response = new NuciApiSuccessResponse("OK") { Code = "200" };
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.Is<SendEmailRequest>(r => r.Recipient == "test@example.com" && r.Subject == "Test Subject" && r.Body == "Test Body" && r.Sender == "Test Sender"),
@@ -86,15 +87,16 @@ public class NuciNotificationsClientTests
 
         var act = async () => await _client.SendEmail("test@example.com", "Test Subject", "Test Body");
 
-        await act.Should().ThrowAsync<SmtpException>()
-            .WithMessage("Error while sending the e-mail notification.")
-            .WithInnerException(originalException);
+        var exception = await act.Should().ThrowAsync<SmtpException>()
+            .WithMessage("Error while sending the e-mail notification.");
+
+        exception.Which.InnerException.Should().Be(originalException);
     }
 
     [Test]
     public async Task GivenApiReturnsUnsuccessfulResponse_WhenSendEmail_ThenThrowsSmtpExceptionWithErrorMessage()
     {
-        var errorResponse = new NuciApiErrorResponse { IsSuccessful = false, Code = "400", Message = "Bad Request" };
+        var errorResponse = new NuciApiErrorResponse("Bad Request", "400");
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
@@ -111,7 +113,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenApiReturnsAuthenticationFailure_WhenSendEmail_ThenThrowsSmtpException()
     {
-        var errorResponse = new NuciApiErrorResponse { IsSuccessful = false, Code = "401", Message = "Authentication Failure" };
+        var errorResponse = new NuciApiErrorResponse("Authentication Failure", "401");
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
@@ -128,7 +130,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenApiReturnsUnauthorised_WhenSendEmail_ThenThrowsSmtpException()
     {
-        var errorResponse = new NuciApiErrorResponse { IsSuccessful = false, Code = "403", Message = "Unauthorised" };
+        var errorResponse = new NuciApiErrorResponse("Unauthorised", "403");
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
@@ -145,7 +147,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenApiReturnsRateLimited_WhenSendEmail_ThenThrowsSmtpException()
     {
-        var errorResponse = new NuciApiErrorResponse { IsSuccessful = false, Code = "429", Message = "Rate Limited" };
+        var errorResponse = new NuciApiErrorResponse("Rate Limited", "429");
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
@@ -162,7 +164,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenApiReturnsInternalServerError_WhenSendEmail_ThenThrowsSmtpException()
     {
-        var errorResponse = new NuciApiErrorResponse { IsSuccessful = false, Code = "500", Message = "Internal Server Error" };
+        var errorResponse = new NuciApiErrorResponse("Internal Server Error", "500");
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
@@ -260,7 +262,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenSpecialCharactersInParameters_WhenSendEmail_ThenCallsApiClientCorrectly()
     {
-        var response = new NuciApiSuccessResponse { IsSuccessful = true, Code = "200", Message = "OK" };
+        var response = new NuciApiSuccessResponse("OK") { Code = "200" };
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
@@ -280,7 +282,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenLongStrings_WhenSendEmail_ThenCallsApiClientCorrectly()
     {
-        var response = new NuciApiSuccessResponse { IsSuccessful = true, Code = "200", Message = "OK" };
+        var response = new NuciApiSuccessResponse("OK") { Code = "200" };
         var longSubject = new string('a', 1000);
         var longBody = new string('b', 10000);
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
@@ -302,7 +304,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenUnicodeCharacters_WhenSendEmail_ThenCallsApiClientCorrectly()
     {
-        var response = new NuciApiSuccessResponse { IsSuccessful = true, Code = "200", Message = "OK" };
+        var response = new NuciApiSuccessResponse("OK") { Code = "200" };
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
@@ -322,7 +324,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenNullSenderName_WhenSendEmailWithSenderName_ThenPassesNullToRequest()
     {
-        var response = new NuciApiSuccessResponse { IsSuccessful = true, Code = "200", Message = "OK" };
+        var response = new NuciApiSuccessResponse("OK") { Code = "200" };
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.Is<SendEmailRequest>(r => r.Sender == null),
@@ -342,7 +344,7 @@ public class NuciNotificationsClientTests
     [Test]
     public async Task GivenEmptySenderName_WhenSendEmailWithSenderName_ThenPassesEmptyStringToRequest()
     {
-        var response = new NuciApiSuccessResponse { IsSuccessful = true, Code = "200", Message = "OK" };
+        var response = new NuciApiSuccessResponse("OK") { Code = "200" };
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.Is<SendEmailRequest>(r => r.Sender == ""),
@@ -372,15 +374,16 @@ public class NuciNotificationsClientTests
 
         var act = async () => await _client.SendEmail("test@example.com", "Test Subject", "Test Body");
 
-        await act.Should().ThrowAsync<SmtpException>()
-            .WithMessage("Error while sending the e-mail notification.")
-            .WithInnerException(originalException);
+        var exception = await act.Should().ThrowAsync<SmtpException>()
+            .WithMessage("Error while sending the e-mail notification.");
+
+        exception.Which.InnerException.Should().Be(originalException);
     }
 
     [Test]
     public async Task GivenApiReturnsServiceUnavailable_WhenSendEmail_ThenThrowsSmtpException()
     {
-        var errorResponse = new NuciApiErrorResponse { IsSuccessful = false, Code = "503", Message = "Service Unavailable" };
+        var errorResponse = new NuciApiErrorResponse("Service Unavailable", "503");
         _mockApiClient.Setup(x => x.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                 HttpMethod.Post,
                 It.IsAny<SendEmailRequest>(),
