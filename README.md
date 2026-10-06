@@ -116,3 +116,15 @@ The current package targets `.NET 10.0`.
 ## License
 
 This project is licensed under the `GNU General Public License v3.0` or later. See [LICENSE](./LICENSE) for details.
+
+## Documentation
+
+- [Architecture](ARCHITECTURE.md) — System architecture and component overview
+- [Components](docs/COMPONENTS.md) — Detailed component reference
+- [Execution Flows](docs/EXECUTION_FLOWS.md) — End-to-end flow diagrams and descriptions
+- [Dependencies](docs/DEPENDENCIES.md) — Dependency graph and version compatibility
+- [Configuration](docs/CONFIGURATION.md) — Configuration options and examples
+- [Error Handling](docs/ERROR_HANDLING.md) — Exception types, scenarios, and retry guidance
+- [Security](SECURITY.md) — Security model, threat model, and vulnerability reporting
+- [Privacy](PRIVACY.md) — Data processing and privacy information
+- [Roadmap](ROADMAP.md) — Planned features and release cadence
