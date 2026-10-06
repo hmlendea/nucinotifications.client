@@ -13,10 +13,12 @@ namespace NuciNotifications.Client
     /// Implements the INuciNotificationsClient interface to provide functionality for sending notifications using the NuciNotifications API.
     /// </summary>
     /// <param name="settings">The NuciNotifications settings.</param>
+    /// <param name="apiClient">The Nuci API client.</param>
     public class NuciNotificationsClient(
-        NuciNotificationsSettings settings) : INuciNotificationsClient
+        NuciNotificationsSettings settings,
+        INuciApiClient? apiClient = null) : INuciNotificationsClient
     {
-        readonly NuciApiClient apiClient = new(settings.BaseUrl);
+        readonly INuciApiClient apiClient = apiClient ?? new NuciApiClient(settings.BaseUrl);
 
         /// <summary>
         /// Sends an email notification request.
@@ -39,12 +41,25 @@ namespace NuciNotifications.Client
         /// <param name="subject">The subject of the email.</param>
         /// <param name="body">The body content of the email.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="ArgumentNullException">Thrown when recipient, subject, or body is null.</exception>
+        /// <exception cref="ArgumentException">Thrown when recipient, subject, or body is empty or whitespace.</exception>
         public async Task SendEmail(
             string senderName,
             string recipient,
             string subject,
             string body)
         {
+            ArgumentNullException.ThrowIfNull(recipient);
+            ArgumentNullException.ThrowIfNull(subject);
+            ArgumentNullException.ThrowIfNull(body);
+
+            if (string.IsNullOrWhiteSpace(recipient))
+                throw new ArgumentException("Recipient cannot be empty or whitespace.", nameof(recipient));
+            if (string.IsNullOrWhiteSpace(subject))
+                throw new ArgumentException("Subject cannot be empty or whitespace.", nameof(subject));
+            if (string.IsNullOrWhiteSpace(body))
+                throw new ArgumentException("Body cannot be empty or whitespace.", nameof(body));
+
             NuciApiRequestAuthorisationInfo authorisationInfo = new()
             {
                 BearerToken = settings.ApiKey,
