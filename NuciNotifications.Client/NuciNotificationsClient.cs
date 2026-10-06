@@ -13,10 +13,12 @@ namespace NuciNotifications.Client
     /// Implements the INuciNotificationsClient interface to provide functionality for sending notifications using the NuciNotifications API.
     /// </summary>
     /// <param name="settings">The NuciNotifications settings.</param>
+    /// <param name="apiClient">The Nuci API client.</param>
     public class NuciNotificationsClient(
-        NuciNotificationsSettings settings) : INuciNotificationsClient
+        NuciNotificationsSettings settings,
+        INuciApiClient? apiClient = null) : INuciNotificationsClient
     {
-        readonly NuciApiClient apiClient = new(settings.BaseUrl);
+        readonly INuciApiClient apiClient = apiClient ?? new NuciApiClient(settings.BaseUrl);
 
         /// <summary>
         /// Sends an email notification request.
