@@ -23,6 +23,7 @@ NuciNotifications.Client is a lightweight .NET client library for sending notifi
 - [Roadmap](#️-roadmap)
 - [Documentation](#-documentation)
 - [Security](#-security)
+- [Code of Conduct](#-code-of-conduct)
 - [Contributing](#-contributing)
 - [Project Engagement](#-project-engagement)
 - [License](#-license)
@@ -204,6 +205,10 @@ See [ROADMAP.md](./ROADMAP.md) for planned work and forthcoming changes.
 ## 🔒 Security
 
 For information on reporting security vulnerabilities, see [SECURITY.md](./SECURITY.md).
+
+## 📜 Code of Conduct
+
+See the [Code of Conduct](./CODE_OF_CONDUCT.md) for the standards of conduct expected in all project spaces.
 
 ## 🤝 Contributing
 
