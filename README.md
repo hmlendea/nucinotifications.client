@@ -6,37 +6,65 @@
 
 # NuciNotifications.Client
 
-NuciNotifications.Client is a lightweight .NET client library for sending notifications through the [NuciNotifications API](https://github.com/hmlendea/nucinotifications-api). It provides a strongly-typed, DI-friendly abstraction with asynchronous email sending, Bearer token authentication, and HMAC request signing.
+NuciNotifications.Client is a .NET 10 library for asynchronous e-mail submission, Bearer authentication, HMAC signing, and optional ordered attachments.
+
+> **Project status:** Attachments are implemented in this working tree. The latest verified published package is 1.1.2; do not presume it includes these changes.
 
 ## 📑 Table of Contents
 
+- [Table of Contents](#-table-of-contents)
 - [Capabilities](#-capabilities)
 - [Use Cases](#-use-cases)
 - [Usage](#-usage)
+    - [Examples](#examples)
+- [Known Limitations](#-known-limitations)
 - [Installation](#-installation)
-- [Configuration](#️-configuration)
+    - [Package Manager Installation](#package-manager-installation)
+    - [Manual Installation](#manual-installation)
+- [Configuration](#-configuration)
+    - [Settings](#settings)
+    - [Environment Variables](#environment-variables)
+    - [Secret Management](#secret-management)
+    - [Validation](#validation)
 - [Compatibility](#-compatibility)
 - [Integrations](#-integrations)
 - [Authentication and Authorisation](#-authentication-and-authorisation)
-- [Privacy and Data](#️-privacy-and-data)
-- [Architecture](#️-architecture)
-- [Roadmap](#️-roadmap)
+- [Privacy and Data](#-privacy-and-data)
+- [Development](#-development)
+    - [Requirements](#requirements)
+    - [Setup](#setup)
+    - [Build](#build)
+    - [Test](#test)
+    - [Continuous Integration](#continuous-integration)
+    - [Release](#release)
+    - [Dependencies](#dependencies)
+- [GitHub Actions](#-github-actions)
+- [Project Structure](#-project-structure)
+    - [Projects and Packages](#projects-and-packages)
+    - [Directories](#directories)
+- [Architecture](#-architecture)
 - [Documentation](#-documentation)
-- [Security](#-security)
-- [Code of Conduct](#-code-of-conduct)
+- [API Reference](#-api-reference)
+- [Data Formats and Protocols](#-data-formats-and-protocols)
+- [Troubleshooting](#-troubleshooting)
 - [Contributing](#-contributing)
+- [Code of Conduct](#-code-of-conduct)
+- [Related Projects](#-related-projects)
+- [Security](#-security)
+- [Support](#-support)
 - [Project Engagement](#-project-engagement)
 - [License](#-license)
 
 ## ✨ Capabilities
 
-- **Async email sending** — Two overloads: minimal (`recipient`, `subject`, `body`) and explicit sender (`senderName`, `recipient`, `subject`, `body`)
+- **Async email sending** - Preserve minimal and explicit-sender calls, with optional ordered file attachments.
 - **Bearer token authentication** — `ApiKey` sent as `Authorization: Bearer` header
 - **HMAC request signing** — `HmacSharedSecretKey` used to sign requests for integrity and authenticity
 - **Dependency injection ready** — `INuciNotificationsClient` interface, `ServiceCollectionExtensions` for config binding and singleton registration
 - **Strongly-typed requests** — `SendEmailRequest` DTO with `HmacOrder` attributes for deterministic signing
-- **Comprehensive error handling** — All failures surfaced as `SmtpException` with inner exception or API error message
-- **Secure by default** — Secrets never logged; caller controls storage (user secrets, Key Vault, env vars)
+- **Input validation** — Invalid message fields and attachments produce argument exceptions prior to transport.
+- **Transport error translation** — Transport exceptions and unsuccessful API responses produce `SmtpException`.
+- **Host-controlled secrets** — The library contains no logging; callers control credential storage and exception reporting.
 
 ## 🎯 Use Cases
 
@@ -46,20 +74,7 @@ NuciNotifications.Client is a lightweight .NET client library for sending notifi
 
 ## 🚀 Usage
 
-### Quick Start
-
-**1. Configure settings** (`appsettings.json`):
-```json
-{
-  "NuciNotificationsSettings": {
-    "BaseUrl": "https://your-nuci-notifications-api",
-    "ApiKey": "your-api-key",
-    "HmacSharedSecretKey": "your-hmac-shared-secret"
-  }
-}
-```
-
-**2. Register services** (`Program.cs`):
+Configure the host's `NuciNotificationsSettings` section using protected credential sources, then register services in its composition root:
 ```csharp
 using NuciNotifications.Client;
 using NuciNotifications.Client.Configuration;
@@ -83,6 +98,8 @@ public sealed class NotificationsService(INuciNotificationsClient notificationsC
 }
 ```
 
+### Examples
+
 With explicit sender name:
 ```csharp
 await notificationsClient.SendEmail(
@@ -92,9 +109,31 @@ await notificationsClient.SendEmail(
     "Message body");
 ```
 
+For optional attachments, use the five-argument overload. Pass `null` as the sender name for the default sender:
+```csharp
+using NuciNotifications.Client.Requests;
+
+await notificationsClient.SendEmail(
+    null,
+    "user@example.com",
+    "Report",
+    "Please consult the attached report.",
+    [new EmailAttachmentRequest { FileName = "report.txt", Content = "SGVsbG8=" }]);
+```
+
+`Content` contains Base64-encoded bytes, not a file path. File names must contain 1-255 characters without directory separators or control characters. Null or empty attachment collections send no files. Invalid attachments produce `ArgumentException` before transport. Attachment names, contents, and order participate in HMAC signing; the signing-only property is excluded from JSON. Use an API deployment supporting this attachment contract. Existing three- and four-argument calls remain unchanged and unambiguous.
+
+## ⚠️ Known Limitations
+
+- Attachments require a matching API request/signing contract; no minimum server version is verified.
+- No file reading, streaming, malware scanning, or payload-size enforcement is implemented.
+- No built-in retry, delivery receipt, scheduling, or batch API is implemented.
+- HTTPS is recommended but not enforced by this library. Base64 is encoding, not encryption.
+
 ## 📦 Installation
 
 [![Obtain it from NuGet](https://raw.githubusercontent.com/hmlendea/readme-assets/master/badges/stores/nuget.png)](https://nuget.org/packages/NuciNotifications.Client)
+[![Obtain it from GitHub](https://raw.githubusercontent.com/hmlendea/readme-assets/master/badges/stores/github.png)](https://github.com/hmlendea/nucinotifications.client/releases)
 
 ### Package Manager Installation
 
@@ -107,12 +146,17 @@ Or, via the `Package Manager Console`:
 Install-Package NuciNotifications.Client
 ```
 
+### Manual Installation
+
+Download the `.nupkg` from a [published GitHub release](https://github.com/hmlendea/nucinotifications.client/releases), place it in a local NuGet source, and install `NuciNotifications.Client` from that source. Published 1.1.2 artefacts do not establish attachment availability.
+
 ## ⚙️ Configuration
+
+The [settings contract](NuciNotifications.Client/Configuration/NuciNotificationsSettings.cs) can be constructed directly or bound from the `NuciNotificationsSettings` section. The host chooses configuration providers and their precedence; no configuration file is shipped by the library.
 
 ### Settings
 
 The subsequent settings are recognised:
-
 | Section | Key | Type | Default | Required | Description |
 |---------|-----|------|---------|----------|-------------|
 | `NuciNotificationsSettings` | `BaseUrl` | `string` | — | Yes | Base URL of the NuciNotifications API (e.g., `https://api.example.com`) |
@@ -122,7 +166,6 @@ The subsequent settings are recognised:
 ### Environment Variables
 
 The subsequent environment variables can be set:
-
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
 | `NuciNotificationsSettings__BaseUrl` | Yes | — | Base URL of the NuciNotifications API |
@@ -157,38 +200,117 @@ if (!Uri.TryCreate(settings.BaseUrl, UriKind.Absolute, out _))
 | Component | Supported Versions | Notes |
 |-----------|--------------------|-------|
 | .NET | 10.0 | Target framework |
-| NuciNotifications API | Compatible with API v1+ | Server-side API |
+| NuciNotifications API | Matching `/Email` request and HMAC contract | Verify deployed server support for attachments |
 
 ## 🔌 Integrations
 
 | Integration | Compatibility | Purpose | Required |
 |-------------|---------------|---------|----------|
-| NuciNotifications API | v1+ | Notification delivery backend | Yes |
-| Microsoft.Extensions.DependencyInjection | 10.0.x | DI container integration | Yes |
-| Microsoft.Extensions.Configuration | 10.0.x | Configuration binding | Yes |
+| Configured NuciNotifications API | Matching `/Email` contract | Notification submission | Yes |
+| Microsoft configuration/options and DI | Direct packages 10.0.13 | Settings-binding helper | No; construct settings directly if preferred |
 
 ## 🔐 Authentication and Authorisation
 
-| Role or Scope | Access | Intended Audience |
-|---------------|--------|-------------------|
-| `ApiKey` (Bearer token) | Full API access | Application services |
-| `HmacSharedSecretKey` | Request signing | Application services |
-
-Both credentials are configured via `NuciNotificationsSettings` and passed to the API on each request. The client never logs these values.
+`ApiKey` supplies the Bearer token and `HmacSharedSecretKey` supplies request signing via the transport. Server permissions and signature verification are controlled by the API; this repository does not define roles or scopes. The library contains no logging, but callers must protect credentials and transport/API error details.
 
 ## 🛡️ Privacy and Data
 
+NuciNotifications.Client processes and transmits caller-provided message fields and optional attachments to the configured API without implementing local persistence or telemetry.
+
 For the detailed description of how the application handles privacy and personal data, see [PRIVACY.md](./PRIVACY.md).
+
+The host controls input selection and credentials; the API operator controls subsequent delivery and persistence.
+
+| Data | Purpose | Storage | Retention | Optional |
+|------|---------|---------|-----------|----------|
+| Recipient, subject, body | E-mail submission | Client memory; configured API | No library persistence; external policy applies | No |
+| Sender name | Sender selection | Client memory; configured API | External policy applies | Yes |
+| Attachment names and Base64 contents | File submission and signing | Client memory; configured API | External policy applies | Yes |
+| Credentials | Bearer authentication and HMAC | Host settings and transport memory | Host-controlled | No for authenticated submission |
+
+## 🛠️ Development
+
+### Requirements
+
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- Git for source checkout.
+
+### Setup
+
+```bash
+git clone https://github.com/hmlendea/nucinotifications.client.git
+cd nucinotifications.client
+dotnet restore NuciNotifications.Client.slnx
+```
+
+### Build
+
+```bash
+dotnet build NuciNotifications.Client.slnx --no-restore
+```
+
+### Test
+
+```bash
+dotnet test NuciNotifications.Client.slnx --no-build
+```
+
+### Continuous Integration
+
+The [.NET workflow](.github/workflows/dotnet.yml) restores, builds, and tests on pushes and pull requests to `master`. The commands above reproduce those principal checks. Unit tests use a mock transport; no live API is required.
+
+### Release
+
+Publishing a GitHub release activates both packaging workflows. They derive the package version from the tag without its `v` prefix and run `dotnet pack -c Release --output ./nupkg -p:Version=...`. The [GitHub release workflow](.github/workflows/github-release.yml) uploads the package and appends its SHA256 checksum; the [NuGet release workflow](.github/workflows/nuget-release.yml) uses OIDC for publication. No release helper script exists in this repository.
+
+### Dependencies
+
+| Package | Version | Scope | Purpose |
+|---------|---------|-------|---------|
+| NuciAPI.Client | 1.2.4 | Runtime | HTTP and signing integration |
+| Microsoft.Extensions.DependencyInjection.Abstractions | 10.0.13 | Runtime | DI registration contracts |
+| Microsoft.Extensions.Options.ConfigurationExtensions | 10.0.13 | Runtime | Settings binding |
+| NUnit / NUnit3TestAdapter | 5.0.0 / 6.3.1 | Development | Test framework and adapter |
+| Moq / FluentAssertions | 4.21.0 / 8.11.0 | Development | Mock transport and assertions |
+| Microsoft.NET.Test.Sdk | 18.11.0 | Development | Test execution |
+| Microsoft.Extensions.DependencyInjection | 10.0.13 | Development | Test service container |
+
+## ⚙️ GitHub Actions
+
+| Workflow | Purpose | What it does |
+|----------|---------|--------------|
+| [ .NET ](https://github.com/hmlendea/nucinotifications.client/blob/master/.github/workflows/dotnet.yml) | Validation | Restore, build, and test |
+| [ GitHub Release ](https://github.com/hmlendea/nucinotifications.client/blob/master/.github/workflows/github-release.yml) | Release artefacts | Pack library, upload package, append checksum |
+| [ NuGet.org Release ](https://github.com/hmlendea/nucinotifications.client/blob/master/.github/workflows/nuget-release.yml) | Package publication | Pack and publish using OIDC |
+
+## 🗂️ Project Structure
+
+The [solution](NuciNotifications.Client.slnx) contains the library and its unit tests.
+
+### Projects and Packages
+
+| Project | Type | Purpose |
+|---------|------|---------|
+| [Client project](NuciNotifications.Client/NuciNotifications.Client.csproj) | .NET 10 library | Notification facade and request contracts |
+| [Unit-test project](NuciNotifications.Client.UnitTests/NuciNotifications.Client.UnitTests.csproj) | NUnit tests | Validation, signing, transport, and configuration checks |
+
+### Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| [Requests](NuciNotifications.Client/Requests/) | Message and attachment DTOs |
+| [Configuration](NuciNotifications.Client/Configuration/) | Settings model |
+| [Documentation](docs/) | Detailed technical reference |
 
 ## 🏗️ Architecture
 
+NuciNotifications.Client separates the public facade, request validation/signing contracts, settings composition, and replaceable HTTP transport.
+
 See the [architecture documentation](ARCHITECTURE.md) for the system context, principal components, runtime flows, ownership boundaries, dependencies, constraints, and extension points.
 
-## 🗺️ Roadmap
-
-See [ROADMAP.md](./ROADMAP.md) for planned work and forthcoming changes.
-
 ## 📚 Documentation
+
+The [documentation index](docs/README.md) provides detailed technical references.
 
 | Resource | Description |
 |----------|-------------|
@@ -200,15 +322,25 @@ See [ROADMAP.md](./ROADMAP.md) for planned work and forthcoming changes.
 | [Error Handling](docs/ERROR_HANDLING.md) | Exception types, scenarios, and retry guidance |
 | [Security](SECURITY.md) | Security model, threat model, and vulnerability reporting |
 | [Privacy](PRIVACY.md) | Data processing and privacy information |
-| [Roadmap](ROADMAP.md) | Planned features and release cadence |
 
-## 🔒 Security
+## 🌐 API Reference
 
-For information on reporting security vulnerabilities, see [SECURITY.md](./SECURITY.md).
+Consult the [component reference](docs/COMPONENTS.md), [public interface](NuciNotifications.Client/INuciNotificationsClient.cs), and [attachment DTO](NuciNotifications.Client/Requests/EmailAttachmentRequest.cs).
 
-## 📜 Code of Conduct
+## 🧾 Data Formats and Protocols
 
-See the [Code of Conduct](./CODE_OF_CONDUCT.md) for the standards of conduct expected in all project spaces.
+| Format or Protocol | Specification | Purpose |
+|--------------------|---------------|---------|
+| `/Email` request | [Request DTO](NuciNotifications.Client/Requests/SendEmailRequest.cs) | Message fields and ordered attachments |
+| Attachment signing input | [Architecture](ARCHITECTURE.md#-compatibility-contracts) | Ordered Web JSON; zero-length string for absent files |
+
+## 🩺 Troubleshooting
+
+| Symptom | Probable Cause | Resolution |
+|---------|----------------|------------|
+| Local `ArgumentException` for attachments | Null item, invalid name, or invalid Base64 | Correct input; no request is dispatched |
+| `SmtpException` with an inner exception | Transport exception | Inspect details securely; verify connectivity and endpoint |
+| `SmtpException` with API message | Unsuccessful API response | Verify credentials and signing-contract agreement |
 
 ## 🤝 Contributing
 
@@ -226,6 +358,24 @@ When doing so, please:
 
 See the [contributing guidelines](./CONTRIBUTING.md) for details on how to report issues, suggest enhancements, and submit changes.
 
+## 📜 Code of Conduct
+
+See the [Code of Conduct](./CODE_OF_CONDUCT.md) for the standards of conduct expected in all project spaces.
+
+## 🔗 Related Projects
+
+- [NuciNotifications API](https://github.com/hmlendea/nucinotifications-api): notification service integrated by this client; confirm deployment compatibility for attachments.
+
+## 🔒 Security
+
+NuciNotifications.Client validates attachment metadata and content encoding and delegates authenticated transport to `NuciAPI.Client`; hosts must protect credentials, require HTTPS, and enforce content and size policies.
+
+For information on reporting security vulnerabilities, see [SECURITY.md](./SECURITY.md).
+
+## 💬 Support
+
+Use [GitHub Issues](https://github.com/hmlendea/nucinotifications.client/issues) for non-sensitive questions and suggestions. Report vulnerabilities privately under the [security policy](SECURITY.md).
+
 ## 💝 Project Engagement
 
 Discovered a problem or have a suggestion? [Open an issue](https://github.com/hmlendea/nucinotifications.client/issues)!
@@ -237,4 +387,4 @@ If you find this project useful, consider [funding it](https://hmlendea.go.ro/fu
 ## 📄 License
 
 This project is being distributed under the `GNU General Public License v3.0` or later.
-See [LICENSE](./LICENSE) for further information.
+See [LICENSE](./LICENSE) for additional information.

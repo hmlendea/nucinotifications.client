@@ -4,6 +4,10 @@ This document describes error handling behavior in NuciNotifications.Client.
 
 ## Exception Types
 
+### Attachment Validation
+
+The five-argument `SendEmail` overload validates attachments before transport. Invalid file names, invalid or absent Base64 content, and null attachment elements produce `ArgumentException` with parameter name `attachments`. The message excludes file names and content. Null and empty collections are valid. API errors and transport exceptions retain the `SmtpException` contract described here.
+
 ### SmtpException
 
 **Namespace:** `System.Net.Mail`

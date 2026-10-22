@@ -78,8 +78,8 @@ new SendEmailRequest()
 {
     Sender = senderName,      // HmacOrder(1) - can be null
     Recipient = recipient,    // HmacOrder(2) - required
-    Subject = subject,        // HmacOrder(5) - required
-    Body = body               // HmacOrder(6) - required
+       Subject = subject,        // HmacOrder(3) - required
+       Body = body               // HmacOrder(4) - required
 }
 ```
 
@@ -229,7 +229,7 @@ SendEmailRequest instance
 NuciApiClient.SendRequestAsync
        │
        ├─► Get all properties with [HmacOrder] attribute
-       ├─► Sort by HmacOrder value (1, 2, 5, 6)
+       ├─► Sort by HmacOrder value (1, 2, 3, 4, 5)
        ├─► For each property in order:
        │       └─► Get value, convert to string, append to canonical string
        ├─► Compute HMAC-SHA256(canonicalString, HmacSharedSecretKey)
@@ -237,11 +237,9 @@ NuciApiClient.SendRequestAsync
        └─► Add X-HMAC-Signature header
 ```
 
-**Canonical String Format** (inferred from `NuciSecurity.HMAC`):
-```
-{value1}|{value2}|{value5}|{value6}
-```
-Where missing/null values are represented as empty strings.
+The client delegates canonical token generation to `NuciSecurity.HMAC`; no delimiter format is specified here. Attachments are signed via `AttachmentsSignatureContent`, containing `JsonSerializer.Serialize(Attachments, JsonSerializerOptions.Web)` in array order, or an empty string for null/empty arrays. The computed property is excluded from wire JSON, and the attachment array is excluded from direct HMAC processing.
+
+The five-argument overload first materialises and validates attachments. Invalid file names, invalid Base64 content, and null elements produce `ArgumentException` before transport. Null/empty collections remain valid. Existing overloads delegate with no attachments, and transport exceptions retain their existing `SmtpException` semantics.
 
 ## Thread Safety
 

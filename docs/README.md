@@ -19,7 +19,6 @@ This directory contains detailed technical documentation for NuciNotifications.C
 | [../ARCHITECTURE.md](../ARCHITECTURE.md) | System architecture overview |
 | [../SECURITY.md](../SECURITY.md) | Security model, threat model, vulnerability reporting |
 | [../PRIVACY.md](../PRIVACY.md) | Data processing and privacy information |
-| [../ROADMAP.md](../ROADMAP.md) | Planned features and release cadence |
 | [../README.md](../README.md) | Project overview, quick start, and installation |
 
 ## Quick Navigation
@@ -43,4 +42,3 @@ This directory contains detailed technical documentation for NuciNotifications.C
 ### For Contributors
 1. Review [COMPONENTS.md](COMPONENTS.md) — Implementation details
 2. Check [EXECUTION_FLOWS.md](EXECUTION_FLOWS.md) — Behavioral specifications
-3. See [../ROADMAP.md](../ROADMAP.md) — Planned work

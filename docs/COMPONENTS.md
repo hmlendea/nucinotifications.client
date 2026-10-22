@@ -4,7 +4,7 @@ This document provides detailed documentation for each component in the NuciNoti
 
 ## INuciNotificationsClient
 
-**Location:** `INuciNotificationsClient.cs`
+**Location:** [INuciNotificationsClient.cs](../NuciNotifications.Client/INuciNotificationsClient.cs)
 
 **Purpose:** Defines the contract for sending email notifications through the NuciNotifications API.
 
@@ -16,10 +16,11 @@ This document provides detailed documentation for each component in the NuciNoti
 |--------|------------|---------|-------------|
 | `SendEmail` | `recipient: string`, `subject: string`, `body: string` | `Task` | Sends email with default sender (null) |
 | `SendEmail` | `senderName: string`, `recipient: string`, `subject: string`, `body: string` | `Task` | Sends email with explicit sender name |
+| `SendEmail` | `senderName`, `recipient`, `subject`, `body`, `attachments: IEnumerable<EmailAttachmentRequest>` | `Task` | Submits optional ordered attachments; null sender selects the default sender |
 
 **Entry Points:** Called by application code via DI (`INuciNotificationsClient`).
 
-**Dependencies:** None (interface only).
+**Dependencies:** Attachment DTO and standard collection/task contracts.
 
 **Implementation:** `NuciNotificationsClient`.
 
@@ -27,7 +28,7 @@ This document provides detailed documentation for each component in the NuciNoti
 
 ## NuciNotificationsClient
 
-**Location:** `NuciNotificationsClient.cs`
+**Location:** [NuciNotificationsClient.cs](../NuciNotifications.Client/NuciNotificationsClient.cs)
 
 **Purpose:** Concrete implementation of `INuciNotificationsClient` that communicates with the NuciNotifications API.
 
@@ -35,30 +36,35 @@ This document provides detailed documentation for each component in the NuciNoti
 
 **Constructor:**
 ```csharp
-public NuciNotificationsClient(NuciNotificationsSettings settings)
+public NuciNotificationsClient(NuciNotificationsSettings settings, INuciApiClient? apiClient = null)
 ```
 - Captures `settings.BaseUrl`, `settings.ApiKey`, `settings.HmacSharedSecretKey`
-- Creates `NuciApiClient` with `BaseUrl`
+- Uses the supplied transport, or creates `NuciApiClient` with `BaseUrl`
 
 **Fields:**
-- `readonly NuciApiClient apiClient` — HTTP client from `NuciAPI.Client`
+- `readonly INuciApiClient apiClient` — Transport contract from `NuciAPI.Client`
 
 **Method: `SendEmail(recipient, subject, body)`**
 - Delegates to `SendEmail(null, recipient, subject, body)`
 
 **Method: `SendEmail(senderName, recipient, subject, body)`**
-1. Creates `NuciApiRequestAuthorisationInfo` with:
+Delegates to the five-argument overload with null attachments.
+
+**Method: `SendEmail(senderName, recipient, subject, body, attachments)`**
+1. Validates required fields, materialises the attachment enumerable once, and validates nested items.
+2. Creates `NuciApiRequestAuthorisationInfo` with:
    - `BearerToken = settings.ApiKey`
    - `HmacSharedSecretKey = settings.HmacSharedSecretKey`
-2. Constructs `SendEmailRequest` with all four properties
-3. Calls `apiClient.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>`:
+3. Constructs `SendEmailRequest` with message fields and optional attachments
+4. Calls `apiClient.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>`:
    - HTTP Method: `POST`
    - Endpoint: `/Email`
    - Authorization: `authorisationInfo`
-4. On exception: throws `SmtpException` wrapping original exception
-5. On unsuccessful response: throws `SmtpException` with API error message
+5. On transport exception: throws `SmtpException` wrapping original exception
+6. On unsuccessful response: throws `SmtpException` with API error message
 
 **Error Handling:**
+- Invalid required fields or attachments produce argument exceptions prior to transport
 - Network/HTTP errors → `SmtpException` with inner exception
 - API error responses (non-2xx) → `SmtpException` with API message
 - No retry logic
@@ -74,7 +80,7 @@ public NuciNotificationsClient(NuciNotificationsSettings settings)
 
 ## NuciNotificationsSettings
 
-**Location:** `Configuration/NuciNotificationsSettings.cs`
+**Location:** [NuciNotificationsSettings.cs](../NuciNotifications.Client/Configuration/NuciNotificationsSettings.cs)
 
 **Purpose:** Configuration POCO for the client.
 
@@ -107,7 +113,7 @@ public NuciNotificationsClient(NuciNotificationsSettings settings)
 
 ## SendEmailRequest
 
-**Location:** `Requests/SendEmailRequest.cs`
+**Location:** [SendEmailRequest.cs](../NuciNotifications.Client/Requests/SendEmailRequest.cs)
 
 **Purpose:** Request DTO for the `/Email` API endpoint.
 
@@ -121,12 +127,18 @@ public NuciNotificationsClient(NuciNotificationsSettings settings)
 |----------|------|----------|-----------|-------------|
 | `Sender` | `string` | No | 1 | Sender name (can be null) |
 | `Recipient` | `string` | Yes | 2 | Recipient email address |
-| `Subject` | `string` | Yes | 5 | Email subject |
-| `Body` | `string` | Yes | 6 | Email body content |
+| `Subject` | `string` | Yes | 3 | Email subject |
+| `Body` | `string` | Yes | 4 | Email body content |
+| `Attachments` | `EmailAttachmentRequest[]` | No | Ignored | Ordered file names and Base64 content |
+| `AttachmentsSignatureContent` | `string` | Computed | 5 | Web JSON for the ordered files, or an empty string for null/empty attachments; excluded from wire JSON |
 
-**HMAC Signing Order:** Properties are signed in `HmacOrder` sequence (1, 2, 5, 6). Gaps in sequence (3, 4) are intentional for compatibility with API expectations.
+**HMAC Signing Order:** Sender, recipient, subject, body, attachment signature content (1-5), matching the attachment-capable API. The attachment array is excluded from direct HMAC processing.
 
-**Validation:** `[Required]` attributes on Recipient, Subject, Body (enforced by `NuciAPI` serialization/validation pipeline).
+The five-argument `SendEmail(senderName, recipient, subject, body, attachments)` accepts `IEnumerable<EmailAttachmentRequest>`, materialises it once, and validates every item before transport. Existing overloads delegate with no attachments. Pass a null sender for the default sender; no competing four-argument overload is introduced.
+
+[EmailAttachmentRequest](../NuciNotifications.Client/Requests/EmailAttachmentRequest.cs) requires a file name of at most 255 characters with no slash, backslash, or control character, and non-empty valid Base64 content. [SendEmailRequest](../NuciNotifications.Client/Requests/SendEmailRequest.cs) implements `IValidatableObject` to validate nested attachments and reject null elements. Invalid attachments cause `ArgumentException` with parameter name `attachments`, without exposing file contents.
+
+**Validation:** `[Required]` attributes describe Recipient, Subject, and Body. The client explicitly validates these fields and invokes nested attachment validation prior to transport; transport-level validation is not presumed here.
 
 **Dependencies:**
 - `NuciAPI.Requests` — `NuciApiRequest`
@@ -137,7 +149,7 @@ public NuciNotificationsClient(NuciNotificationsSettings settings)
 
 ## ServiceCollectionExtensions
 
-**Location:** `ServiceCollectionExtensions.cs`
+**Location:** [ServiceCollectionExtensions.cs](../NuciNotifications.Client/ServiceCollectionExtensions.cs)
 
 **Purpose:** DI registration helpers for the library.
 
