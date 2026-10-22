@@ -4,6 +4,7 @@ This document covers the guidelines and processes for contributing to this proje
 
 ## 📑 Table of Contents
 
+- [Table of Contents](#-table-of-contents)
 - [How to Contribute](#-how-to-contribute)
   - [Reporting Issues](#reporting-issues)
   - [Suggesting Enhancements](#suggesting-enhancements)
@@ -14,8 +15,8 @@ This document covers the guidelines and processes for contributing to this proje
     - [Pull Request Guidelines](#pull-request-guidelines)
   - [Testing](#testing)
   - [Documentation](#documentation)
-- [Security](#-security)
 - [Code of Conduct](#-code-of-conduct)
+- [Security](#-security)
 - [License](#-license)
 - [Getting Assistance](#-getting-assistance)
 
@@ -30,7 +31,6 @@ This document covers the guidelines and processes for contributing to this proje
 
 ### Suggesting Enhancements
 
-- Check the roadmap and existing discussions.
 - Explain the use case and expected behaviour.
 - Consider implementation complexity.
 
@@ -57,9 +57,9 @@ dotnet restore
 2. Create a feature branch: `git checkout -b feature/your-feature-name`
 3. Make your changes.
 4. Run tests: `dotnet test NuciNotifications.Client.slnx`
-5. Commit with clear and descriptive messages.
-6. Push to your fork.
-7. Open a Pull Request.
+6. Commit with clear and descriptive messages.
+7. Push to your fork.
+8. Open a Pull Request.
 
 #### Pull Request Guidelines
 
@@ -85,13 +85,13 @@ dotnet test NuciNotifications.Client.UnitTests/NuciNotifications.Client.UnitTest
 - Follow the documentation style guide.
 - Preview changes locally if possible.
 
-## 🔒 Security
-
-Report security vulnerabilities per the [Security Policy](SECURITY.md).
-
 ## 📋 Code of Conduct
 
 This project follows the [Code of Conduct](./CODE_OF_CONDUCT.md).
+
+## 🔒 Security
+
+Report security vulnerabilities per the [Security Policy](./SECURITY.md).
 
 ## 📄 License
 

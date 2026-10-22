@@ -1,62 +1,82 @@
-# Security
+# Security Policy
 
-## Reporting Security Vulnerabilities
+This policy covers responsible disclosure for NuciNotifications.Client, including optional attachment validation and signing. Security maintenance covers the latest official distribution; working-tree changes are not evidence of a published release.
 
-If you discover a security vulnerability in NuciNotifications.Client, please report it responsibly:
+## 📑 Table of Contents
 
-**Email:** security@hmlendea.go.ro
+- [Table of Contents](#-table-of-contents)
+- [Supported Versions](#-supported-versions)
+- [Reporting a Vulnerability](#-reporting-a-vulnerability)
+- [Scope](#-scope)
+- [Disclosure Policy](#-disclosure-policy)
+- [Security Model](#-security-model)
+    - [Threat Model](#threat-model)
+    - [Secrets Handling](#secrets-handling)
+    - [HMAC Signing](#hmac-signing)
+    - [Transport Security](#transport-security)
+    - [Input Validation](#input-validation)
+    - [Dependency Security](#dependency-security)
+    - [Secure Development Practices](#secure-development-practices)
+    - [Incident Response](#incident-response)
 
-**Do not** create public GitHub issues for security vulnerabilities.
+## 🛡️ Supported Versions
 
-We will acknowledge receipt within 48 hours and provide a timeline for fix.
+Use this table to indicate which project versions currently receive security maintenance.
 
-## Security Model
+| Version | Distribution Channel | Supported |
+|---------|--------------------|-----------|
+| Latest version | NuGet | ✅ |
+| Latest version | GitHub Releases | ✅ |
+| Latest version | Unofficial third-party distribution channels | ❌ |
+| Preceding versions | Any distribution channel | ❌ |
+
+## 🚨 Reporting a Vulnerability
+
+Please do not disclose suspected vulnerabilities publicly before maintainers have had an opportunity to validate and remediate them.
+
+To report a vulnerability:
+- [GitHub Security Advisories](https://github.com/hmlendea/nucinotifications.client/security/advisories)
+- Contact the maintainers directly
+
+The existing maintainer contact is security@hmlendea.go.ro. Include affected versions, reproduction steps, and potential impact without credentials, personal message content, or sensitive attachments. The previously documented response objective is acknowledgement within 48 hours; this is not a guaranteed remediation interval. Do not use public issues for vulnerability reports.
+
+## 📌 Scope
+
+The subsequent report categories are in scope for this repository:
+- Client request integrity, credential exposure, and transport integration defects.
+- Attachment validation bypasses, signing discrepancies, and unintended message-data disclosure.
+
+The subsequent categories are out of scope unless explicitly stated to the contrary:
+- Vulnerabilities solely in independently operated API deployments or their delivery infrastructure; report those to their operators.
+- Unauthorised testing of third-party systems or disclosure of genuine credentials and message data.
+
+## 📢 Disclosure Policy
+
+This project follows coordinated disclosure:
+1. Vulnerabilities are investigated privately.
+2. A remediation plan is prepared and validated.
+3. Public disclosure is published after a fix, mitigation, or agreed risk decision is available.
+4. Credit is attributed in accordance with reporter preference and project policy.
+
+## 🔐 Security Model
 
 ### Threat Model
 
 | Asset | Threat | Mitigation |
 |-------|--------|------------|
-| `ApiKey` (Bearer token) | Theft from config/logs/memory | Never logged; stored in secure config (Key Vault, user secrets) |
-| `HmacSharedSecretKey` | Theft from config/logs/memory | Never logged; stored in secure config |
-| Request integrity | Tampering in transit | HMAC-SHA256 signing of request body |
-| Request authenticity | Replay attacks | HMAC includes all request parameters; API should enforce nonce/timestamp |
-| API communication | MITM | HTTPS enforced (BaseUrl should be https://) |
-
-### Data Flow Security
-
-```
-Application
-    │
-    ├─► NuciNotificationsSettings (in memory)
-    │       ├─ BaseUrl (low sensitivity)
-    │       ├─ ApiKey (HIGH sensitivity)
-    │       └─ HmacSharedSecretKey (HIGH sensitivity)
-    │
-    ▼
-NuciNotificationsClient
-    │
-    ├─► NuciApiRequestAuthorisationInfo
-    │       ├─ BearerToken = ApiKey
-    │       └─ HmacSharedSecretKey = HmacSharedSecretKey
-    │
-    ▼
-NuciApiClient (NuciAPI.Client)
-    │
-    ├─► Authorization: Bearer {ApiKey} header
-    ├─► X-HMAC-Signature header (computed from request + HmacSharedSecretKey)
-    ├─► HTTPS POST to {BaseUrl}/Email
-    │
-    ▼
-NuciNotifications API
-```
+| `ApiKey` and `HmacSharedSecretKey` | Exposure via configuration, memory, or host diagnostics | Use protected host configuration; library has no logging, but transport exceptions require scrutiny |
+| Request integrity | Message or attachment alteration | HMAC signing contract; deployed API must verify it |
+| Request authenticity | Replay of a valid signed request | No client replay-protection guarantee; server policy is external |
+| Message and attachment confidentiality | Interception or excessive diagnostics | Configure HTTPS and protect host/server logs; Base64 is not encryption |
+| Attachment resources | Excessive input or malicious content | Host must enforce payload limits and content policy |
 
 ### Secrets Handling
 
 **This library:**
 - Does not log `ApiKey` or `HmacSharedSecretKey`
-- Does not include secrets in exception messages
+- Uses a generic attachment-validation message; API messages and inner transport exceptions are not sanitised
 - Does not persist secrets
-- Passes secrets only to `NuciApiClient` for request signing
+- Passes authorisation information to the configured `INuciApiClient` for authentication and signing
 
 **Caller must:**
 - Store secrets in secure configuration (Azure Key Vault, AWS Secrets Manager, HashiCorp Vault, user secrets)
@@ -66,41 +86,37 @@ NuciNotifications API
 
 ### HMAC Signing
 
-**Algorithm:** HMAC-SHA256 (via `NuciSecurity.HMAC`)
+Signing is delegated to `NuciAPI.Client` and its HMAC integration. The locally verified contract is defined by the attributes and computed content in [SendEmailRequest](NuciNotifications.Client/Requests/SendEmailRequest.cs); this document does not prescribe an unverified token delimiter or header format.
 
 **Signed Properties (in order):**
 1. `Sender` (HmacOrder 1) — can be null
 2. `Recipient` (HmacOrder 2) — required
-3. `Subject` (HmacOrder 5) — required
-4. `Body` (HmacOrder 6) — required
+3. `Subject` (HmacOrder 3) - required
+4. `Body` (HmacOrder 4) - required
+5. `AttachmentsSignatureContent` (HmacOrder 5) - ordered Web JSON of file names and Base64 contents, or an empty string for absent/empty attachments
 
-**Signature Header:** `X-HMAC-Signature: <base64-hmac>`
+The attachment array is excluded from direct signing; its computed signature content is excluded from wire JSON. Names, contents, order, and file removal affect the token. Nested validation rejects null elements, invalid Base64, and unsafe file names before transport. Attachments remain caller-provided data in memory; the library performs no file access, persistence, scanning, or payload-size enforcement. Use HTTPS and apply application-specific content and size restrictions. Base64 is encoding, not encryption.
 
-**Verification:** Performed by NuciNotifications API. Invalid signature → 401/403.
+Signature verification and rejection responses are responsibilities of the configured API. HMAC does not encrypt message data or establish replay protection.
 
 ### Transport Security
 
-- **HTTPS Required:** `BaseUrl` must use `https://` scheme
-- **Certificate Validation:** Uses system default (validates against trusted CAs)
-- **No Certificate Pinning:** Relies on PKI; caller can configure custom `HttpClientHandler` if needed
+- **HTTPS recommendation:** Configure an HTTPS `BaseUrl`; this library does not enforce the URI scheme.
+- **Transport boundary:** TLS configuration, certificate validation, and connection policy belong to the transport and host environment; no certificate-pinning API is exposed here.
 
 ### Input Validation
 
 **Client-side:**
 - `SendEmailRequest` uses `[Required]` on Recipient, Subject, Body
-- Validation enforced by `NuciAPI` serialization pipeline
-- Null `Sender` allowed (omitted from HMAC or sent as empty)
+- The facade explicitly validates required message fields and nested attachments prior to transport
+- Null `Sender` is permitted for default sender selection
+- Attachment names require 1-255 characters without directory separators or control characters; contents require non-empty valid Base64
 
 **API-side:** NuciNotifications API performs authoritative validation.
 
 ### Dependency Security
 
-| Dependency | Version | Security Notes |
-|------------|---------|----------------|
-| `NuciAPI.Client` | 1.2.2 | Handles secrets in `NuciApiRequestAuthorisationInfo` |
-| `NuciSecurity.HMAC` | 4.1.2 | Implements HMAC signing; secret never leaves signing function |
-| `Microsoft.Extensions.*` | 10.0.5 | No known vulnerabilities |
-| `Microsoft.AspNetCore.*` | 2.3.9 / 10.0.5 | No known vulnerabilities |
+The [project manifest](NuciNotifications.Client/NuciNotifications.Client.csproj) references `NuciAPI.Client` 1.2.4 and Microsoft dependency-injection/options packages 10.0.13. HMAC contracts are transitive dependencies. No vulnerability-free assertion is made here.
 
 **Recommendation:** Regularly scan for vulnerabilities:
 ```bash
@@ -122,20 +138,6 @@ dotnet list package --vulnerable --include-transitive
 - [ ] HTTPS used for all external calls
 - [ ] Dependencies updated for security patches
 
-### Compliance
-
-- **GDPR:** No personal data processed by this library (only passes through)
-- **SOC 2:** Compatible with secure configuration practices
-- **PCI DSS:** No cardholder data handled
-
-### Security Headers (API Response)
-
-The NuciNotifications API should return:
-- `Strict-Transport-Security`
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `Content-Security-Policy: default-src 'none'`
-
 ### Incident Response
 
 If secrets are compromised:
@@ -144,6 +146,4 @@ If secrets are compromised:
 3. Audit access logs for unauthorized usage
 4. Review this library's usage for additional exposure
 
-## Contact
-
-Security questions: security@hmlendea.go.ro
+Message fields and attachments may contain personal data. Consult [PRIVACY.md](PRIVACY.md); this policy does not assert legal compliance or security certification.

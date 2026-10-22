@@ -1,9 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Mail;
 using System.Threading.Tasks;
+
 using NuciAPI.Client;
 using NuciAPI.Responses;
+
 using NuciNotifications.Client.Configuration;
 using NuciNotifications.Client.Requests;
 
@@ -18,7 +23,7 @@ namespace NuciNotifications.Client
         NuciNotificationsSettings settings,
         INuciApiClient? apiClient = null) : INuciNotificationsClient
     {
-        readonly INuciApiClient apiClient = apiClient ?? new NuciApiClient(settings.BaseUrl);
+        private readonly INuciApiClient apiClient = apiClient ?? new NuciApiClient(settings.BaseUrl);
 
         /// <summary>
         /// Sends an email notification request.
@@ -48,18 +53,74 @@ namespace NuciNotifications.Client
             string recipient,
             string subject,
             string body)
+            => await SendEmail(senderName, recipient, subject, body, null);
+
+        /// <summary>
+        /// Sends an email notification with optional attachments.
+        /// </summary>
+        /// <param name="senderName">The sender name, or null for the default sender.</param>
+        /// <param name="recipient">The recipient address.</param>
+        /// <param name="subject">The email subject.</param>
+        /// <param name="body">The email body.</param>
+        /// <param name="attachments">The ordered attachments, or null for no attachments.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="ArgumentException">An attachment or required email field is invalid.</exception>
+        public async Task SendEmail(
+            string senderName,
+            string recipient,
+            string subject,
+            string body,
+            IEnumerable<EmailAttachmentRequest> attachments)
+        {
+            ValidateEmailParameters(recipient, subject, body);
+
+            SendEmailRequest request = new()
+            {
+                Sender = senderName,
+                Recipient = recipient,
+                Subject = subject,
+                Body = body
+            };
+
+            if (attachments is not null)
+            {
+                request.Attachments = attachments.ToArray();
+            }
+
+            if (request.Validate(new ValidationContext(request)).Any())
+            {
+                throw new ArgumentException(
+                    "Attachments must contain valid file names and Base64 content.",
+                    nameof(attachments));
+            }
+
+            await SendEmailRequest(request);
+        }
+
+        private static void ValidateEmailParameters(string recipient, string subject, string body)
         {
             ArgumentNullException.ThrowIfNull(recipient);
             ArgumentNullException.ThrowIfNull(subject);
             ArgumentNullException.ThrowIfNull(body);
 
             if (string.IsNullOrWhiteSpace(recipient))
+            {
                 throw new ArgumentException("Recipient cannot be empty or whitespace.", nameof(recipient));
-            if (string.IsNullOrWhiteSpace(subject))
-                throw new ArgumentException("Subject cannot be empty or whitespace.", nameof(subject));
-            if (string.IsNullOrWhiteSpace(body))
-                throw new ArgumentException("Body cannot be empty or whitespace.", nameof(body));
+            }
 
+            if (string.IsNullOrWhiteSpace(subject))
+            {
+                throw new ArgumentException("Subject cannot be empty or whitespace.", nameof(subject));
+            }
+
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                throw new ArgumentException("Body cannot be empty or whitespace.", nameof(body));
+            }
+        }
+
+        private async Task SendEmailRequest(SendEmailRequest request)
+        {
             NuciApiRequestAuthorisationInfo authorisationInfo = new()
             {
                 BearerToken = settings.ApiKey,
@@ -73,13 +134,7 @@ namespace NuciNotifications.Client
                 response =
                     await apiClient.SendRequestAsync<SendEmailRequest, NuciApiSuccessResponse>(
                         HttpMethod.Post,
-                        new SendEmailRequest()
-                        {
-                            Sender = senderName,
-                            Recipient = recipient,
-                            Subject = subject,
-                            Body = body
-                        },
+                        request,
                         authorisationInfo,
                         "/Email");
             }
