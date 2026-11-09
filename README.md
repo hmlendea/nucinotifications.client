@@ -8,8 +8,6 @@
 
 NuciNotifications.Client is a .NET 10 library for asynchronous e-mail submission, Bearer authentication, HMAC signing, and optional ordered attachments.
 
-> **Project status:** Attachments are implemented in this working tree. The latest verified published package is 1.1.2; do not presume it includes these changes.
-
 ## 📑 Table of Contents
 
 - [Table of Contents](#-table-of-contents)
@@ -280,6 +278,7 @@ Publishing a GitHub release activates both packaging workflows. They derive the 
 | Workflow | Purpose | What it does |
 |----------|---------|--------------|
 | [ .NET ](https://github.com/hmlendea/nucinotifications.client/blob/master/.github/workflows/dotnet.yml) | Validation | Restore, build, and test |
+| [ Security ](https://github.com/hmlendea/nucinotifications.client/blob/master/.github/workflows/security.yml) | Security scanning | Vulnerable package check and CodeQL analysis |
 | [ GitHub Release ](https://github.com/hmlendea/nucinotifications.client/blob/master/.github/workflows/github-release.yml) | Release artefacts | Pack library, upload package, append checksum |
 | [ NuGet.org Release ](https://github.com/hmlendea/nucinotifications.client/blob/master/.github/workflows/nuget-release.yml) | Package publication | Pack and publish using OIDC |
 

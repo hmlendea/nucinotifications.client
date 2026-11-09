@@ -199,6 +199,14 @@ The deployment unit is a .NET 10 library package loaded into a host process, not
 | Network | Outbound requests to configured API | Configure HTTPS and API availability externally |
 | Recovery | No built-in retries | Host controls retry policy and duplicate-delivery risks |
 
+## 🔍 Automated Security Scanning
+
+This repository runs automated security scans on every push, pull request, and weekly schedule via the [Security workflow](https://github.com/hmlendea/nucinotifications.client/actions/workflows/security.yml). The scan includes:
+- **Vulnerable package check** — `dotnet list package --vulnerable --include-transitive` identifies known vulnerabilities in direct and transitive dependencies
+- **CodeQL analysis** — Static analysis for C# security issues including injection, path traversal, and insecure patterns
+
+Results are published to the [Security](https://github.com/hmlendea/nucinotifications.client/security) tab and the Actions workflow page.
+
 ## 🛡️ Compatibility Contracts
 
 | Contract | Owner | Invariant | Verification | Change Policy |
