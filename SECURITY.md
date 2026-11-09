@@ -58,6 +58,14 @@ This project follows coordinated disclosure:
 3. Public disclosure is published after a fix, mitigation, or agreed risk decision is available.
 4. Credit is attributed in accordance with reporter preference and project policy.
 
+## 🔍 Automated Security Scanning
+
+This repository runs automated security scans on every push, pull request, and weekly schedule. The scan includes:
+- **Vulnerable package check** — `dotnet list package --vulnerable --include-transitive` identifies known vulnerabilities in direct and transitive dependencies
+- **CodeQL analysis** — Static analysis for C# security issues including injection, path traversal, and insecure patterns
+
+Results are published to the [Security](https://github.com/hmlendea/nucinotifications.client/security) tab and the [Actions](https://github.com/hmlendea/nucinotifications.client/actions/workflows/security.yml) workflow page.
+
 ## 🔐 Security Model
 
 ### Threat Model
