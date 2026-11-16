@@ -205,7 +205,7 @@ if (!Uri.TryCreate(settings.BaseUrl, UriKind.Absolute, out _))
 | Integration | Compatibility | Purpose | Required |
 |-------------|---------------|---------|----------|
 | Configured NuciNotifications API | Matching `/Email` contract | Notification submission | Yes |
-| Microsoft configuration/options and DI | Direct packages 10.0.13 | Settings-binding helper | No; construct settings directly if preferred |
+| Microsoft configuration/options and DI | Direct packages 11.0.0 | Settings-binding helper | No; construct settings directly if preferred |
 
 ## 🔐 Authentication and Authorisation
 
@@ -266,13 +266,13 @@ Publishing a GitHub release activates both packaging workflows. They derive the 
 | Package | Version | Scope | Purpose |
 |---------|---------|-------|---------|
 | NuciAPI.Client | 1.2.4 | Runtime | HTTP and signing integration |
-| Microsoft.Extensions.DependencyInjection.Abstractions | 10.0.13 | Runtime | DI registration contracts |
-| Microsoft.Extensions.Options.ConfigurationExtensions | 10.0.13 | Runtime | Settings binding |
+| Microsoft.Extensions.DependencyInjection.Abstractions | 11.0.0 | Runtime | DI registration contracts |
+| Microsoft.Extensions.Options.ConfigurationExtensions | 11.0.0 | Runtime | Settings binding |
 | NUnit / NUnit3TestAdapter | 5.0.0 / 6.3.1 | Development | Test framework and adapter |
 | Moq / FluentAssertions | 4.21.0 / 8.11.0 | Development | Mock transport and assertions |
-| Microsoft.NET.Test.Sdk | 18.11.0 | Development | Test execution |
-| Microsoft.Extensions.DependencyInjection | 10.0.13 | Development | Test service container |
-| Microsoft.CodeAnalysis.CSharp / TngTech.ArchUnitNET.NUnit | 5.9.0 / 0.13.5 | Development | Architecture source analysis and dependency rules |
+| Microsoft.NET.Test.Sdk | 18.12.0 | Development | Test execution |
+| Microsoft.Extensions.DependencyInjection | 11.0.0 | Development | Test service container |
+| Microsoft.CodeAnalysis.CSharp / TngTech.ArchUnitNET.NUnit | 5.12.0 / 0.13.5 | Development | Architecture source analysis and dependency rules |
 
 ## ⚙️ GitHub Actions
 
