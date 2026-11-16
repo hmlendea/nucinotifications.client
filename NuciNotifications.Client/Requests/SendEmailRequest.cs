@@ -16,26 +16,26 @@ namespace NuciNotifications.Client.Requests
     {
         /// <summary>Gets or sets the optional sender name.</summary>
         [HmacOrder(1)]
-        public string Sender { get; set; }
+        public string? Sender { get; set; }
 
         /// <summary>Gets or sets the recipient address.</summary>
         [Required]
         [HmacOrder(2)]
-        public string Recipient { get; set; }
+        public string Recipient { get; set; } = null!;
 
         /// <summary>Gets or sets the email subject.</summary>
         [Required]
         [HmacOrder(3)]
-        public string Subject { get; set; }
+        public string Subject { get; set; } = null!;
 
         /// <summary>Gets or sets the email body.</summary>
         [Required]
         [HmacOrder(4)]
-        public string Body { get; set; }
+        public string Body { get; set; } = null!;
 
         /// <summary>Gets or sets the optional ordered attachment array.</summary>
         [HmacIgnore]
-        public EmailAttachmentRequest[] Attachments { get; set; }
+        public EmailAttachmentRequest[]? Attachments { get; set; }
 
         /// <summary>Gets the API-compatible attachment content used for HMAC signing.</summary>
         [JsonIgnore]

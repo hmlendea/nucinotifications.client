@@ -23,7 +23,19 @@ namespace NuciNotifications.Client
         NuciNotificationsSettings settings,
         INuciApiClient? apiClient = null) : INuciNotificationsClient
     {
-        private readonly INuciApiClient apiClient = apiClient ?? new NuciApiClient(settings.BaseUrl);
+        private readonly INuciApiClient apiClient = GetApiClient(settings, apiClient);
+
+        private static INuciApiClient GetApiClient(
+            NuciNotificationsSettings settings,
+            INuciApiClient? apiClient)
+        {
+            if (apiClient is not null)
+            {
+                return apiClient;
+            }
+
+            return new NuciApiClient(settings.BaseUrl);
+        }
 
         /// <summary>
         /// Sends an email notification request.
@@ -49,7 +61,7 @@ namespace NuciNotifications.Client
         /// <exception cref="ArgumentNullException">Thrown when recipient, subject, or body is null.</exception>
         /// <exception cref="ArgumentException">Thrown when recipient, subject, or body is empty or whitespace.</exception>
         public async Task SendEmail(
-            string senderName,
+            string? senderName,
             string recipient,
             string subject,
             string body)
@@ -66,11 +78,11 @@ namespace NuciNotifications.Client
         /// <returns>A task representing the asynchronous operation.</returns>
         /// <exception cref="ArgumentException">An attachment or required email field is invalid.</exception>
         public async Task SendEmail(
-            string senderName,
+            string? senderName,
             string recipient,
             string subject,
             string body,
-            IEnumerable<EmailAttachmentRequest> attachments)
+            IEnumerable<EmailAttachmentRequest>? attachments)
         {
             ValidateEmailParameters(recipient, subject, body);
 
@@ -145,7 +157,14 @@ namespace NuciNotifications.Client
 
             if (!response.IsSuccessful)
             {
-                throw new SmtpException(((NuciApiErrorResponse)response).Message);
+                NuciApiErrorResponse? errorResponse = response as NuciApiErrorResponse;
+
+                if (errorResponse is null)
+                {
+                    throw new SmtpException("The API returned an unsuccessful response without an error payload.");
+                }
+
+                throw new SmtpException(errorResponse.Message);
             }
         }
     }

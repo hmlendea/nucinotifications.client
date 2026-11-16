@@ -180,7 +180,7 @@ public class SendEmailRequestTests
         var results = new List<ValidationResult>();
         var isValid = Validator.TryValidateObject(request, context, results, true);
 
-        Assert.That(isValid, Is.True);
+        Assert.That(isValid, Is.EqualTo(true));
         Assert.That(results, Is.Empty);
     }
 
@@ -198,7 +198,7 @@ public class SendEmailRequestTests
         var results = new List<ValidationResult>();
         var isValid = Validator.TryValidateObject(request, context, results, true);
 
-        Assert.That(isValid, Is.True);
+        Assert.That(isValid, Is.EqualTo(true));
         Assert.That(results, Is.Empty);
     }
 

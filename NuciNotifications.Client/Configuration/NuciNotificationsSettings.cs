@@ -8,16 +8,16 @@ namespace NuciNotifications.Client.Configuration
         /// <summary>
         /// Gets or sets the base URL of the NuciNotifications API.
         /// </summary>
-        public string BaseUrl { get; set; }
+        public string BaseUrl { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the API key used for authenticating requests to the NuciNotifications API.
         /// </summary>
-        public string ApiKey { get; set; }
+        public string ApiKey { get; set; } = null!;
 
         /// <summary>
         /// Gets or sets the HMAC shared secret key used for signing requests to the NuciNotifications API.
         /// </summary>
-        public string HmacSharedSecretKey { get; set; }
+        public string HmacSharedSecretKey { get; set; } = null!;
     }
 }
