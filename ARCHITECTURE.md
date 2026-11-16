@@ -184,8 +184,8 @@ The principal dependency rules are:
 | Dependency | Responsibility | Integration Boundary | Architectural Consequence |
 |------------|----------------|----------------------|---------------------------|
 | `NuciAPI.Client` 1.2.4 | HTTP transport and signing integration | `INuciApiClient` | Default implementation can be substituted via constructor |
-| `Microsoft.Extensions.DependencyInjection.Abstractions` 10.0.13 | Service registration contracts | Settings registration helper | Host supplies the service container |
-| `Microsoft.Extensions.Options.ConfigurationExtensions` 10.0.13 | Bind configuration to options | Settings registration helper | Host owns providers and secret sources |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` 11.0.0 | Service registration contracts | Settings registration helper | Host supplies the service container |
+| `Microsoft.Extensions.Options.ConfigurationExtensions` 11.0.0 | Bind configuration to options | Settings registration helper | Host owns providers and secret sources |
 | `NuciAPI.Requests` and `NuciSecurity.HMAC` | Request base type and signing attributes | Request DTO | Supplied transitively; protocol compatibility requires matching server contract |
 
 ## 🚀 Deployment and Operations

@@ -124,7 +124,7 @@ Signature verification and rejection responses are responsibilities of the confi
 
 ### Dependency Security
 
-The [project manifest](NuciNotifications.Client/NuciNotifications.Client.csproj) references `NuciAPI.Client` 1.2.4 and Microsoft dependency-injection/options packages 10.0.13. HMAC contracts are transitive dependencies. No vulnerability-free assertion is made here.
+The [project manifest](NuciNotifications.Client/NuciNotifications.Client.csproj) references `NuciAPI.Client` 1.2.4 and Microsoft dependency-injection/options packages 11.0.0. HMAC contracts are transitive dependencies. No vulnerability-free assertion is made here.
 
 **Recommendation:** Regularly scan for vulnerabilities:
 ```bash

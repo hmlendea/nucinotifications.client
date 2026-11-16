@@ -6,31 +6,30 @@ This document describes all dependencies of NuciNotifications.Client, their role
 
 | Package | Version | Purpose | Transitive Dependencies |
 |---------|---------|---------|------------------------|
-| `Microsoft.Extensions.DependencyInjection.Abstractions` | 10.0.5 | DI abstractions (`IServiceCollection`, `IServiceProvider`) | `Microsoft.Extensions.DependencyInjection` |
-| `Microsoft.Extensions.Options.ConfigurationExtensions` | 10.0.5 | Configuration binding (`services.Configure<TOptions>`, `IOptions<T>`) | `Microsoft.Extensions.Options`, `Microsoft.Extensions.Configuration.Binder` |
-| `NuciAPI.Client` | 1.2.2 | HTTP client, request/response base classes, HMAC signing integration | See below |
+| `Microsoft.Extensions.DependencyInjection.Abstractions` | 11.0.0 | DI abstractions (`IServiceCollection`, `IServiceProvider`) | `Microsoft.Extensions.DependencyInjection` |
+| `Microsoft.Extensions.Options.ConfigurationExtensions` | 11.0.0 | Configuration binding (`services.Configure<TOptions>`, `IOptions<T>`) | `Microsoft.Extensions.Options`, `Microsoft.Extensions.Configuration.Binder` |
+| `NuciAPI.Client` | 1.2.4 | HTTP client, request/response base classes, HMAC signing integration | See below |
 
-## Transitive Dependencies (via NuciAPI.Client 1.2.2)
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `NuciAPI` | 3.4.0 | Core API abstractions: `NuciApiRequest`, `NuciApiResponse`, `NuciApiSuccessResponse`, `NuciApiErrorResponse`, `NuciApiRequestAuthorisationInfo` |
-| `NuciSecurity.HMAC` | 4.1.2 | HMAC signing: `HmacOrderAttribute`, signing logic |
-| `NuciExtensions` | 5.3.0 | Utility extensions used by NuciAPI/NuciSecurity |
-| `Microsoft.AspNetCore.Mvc.Core` | 2.3.9 | Model binding, validation, formatters |
-| `Microsoft.AspNetCore.WebUtilities` | 10.0.5 | HTTP utilities, query helpers |
-
-## Transitive Dependencies (via NuciAPI 3.4.0)
+## Transitive Dependencies (via NuciAPI.Client 1.2.4)
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `NuciSecurity.HMAC` | 4.1.2 | HMAC signing (shared with NuciAPI.Client) |
+| `NuciAPI` | 3.6.2 | Core API abstractions: `NuciApiRequest`, `NuciApiResponse`, `NuciApiSuccessResponse`, `NuciApiErrorResponse`, `NuciApiRequestAuthorisationInfo` |
+| `NuciSecurity.HMAC` | 4.1.4 | HMAC signing: `HmacOrderAttribute`, signing logic |
+| `NuciExtensions` | 6.0.0 | Utility extensions used by NuciAPI/NuciSecurity |
+| `Microsoft.AspNetCore.WebUtilities` | 10.0.13 | HTTP utilities, query helpers |
 
-## Transitive Dependencies (via NuciSecurity.HMAC 4.1.2)
+## Transitive Dependencies (via NuciAPI 3.6.2)
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `NuciExtensions` | 5.1.0 | Base extensions (older version than direct transitive) |
+| `NuciSecurity.HMAC` | 4.1.4 | HMAC signing (shared with NuciAPI.Client) |
+
+## Transitive Dependencies (via NuciSecurity.HMAC 4.1.4)
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `NuciExtensions` | 6.0.0 | Base extensions (shared with NuciAPI.Client) |
 
 ## Framework Dependencies
 
@@ -42,28 +41,27 @@ This document describes all dependencies of NuciNotifications.Client, their role
 
 ```
 NuciNotifications.Client (net10.0)
-├── Microsoft.Extensions.DependencyInjection.Abstractions (10.0.5)
+├── Microsoft.Extensions.DependencyInjection.Abstractions (11.0.0)
 │   └── Microsoft.Extensions.DependencyInjection
-├── Microsoft.Extensions.Options.ConfigurationExtensions (10.0.5)
+├── Microsoft.Extensions.Options.ConfigurationExtensions (11.0.0)
 │   ├── Microsoft.Extensions.Options
 │   └── Microsoft.Extensions.Configuration.Binder
-└── NuciAPI.Client (1.2.2)
-    ├── NuciAPI (3.4.0)
-    │   └── NuciSecurity.HMAC (4.1.2)
-    │       └── NuciExtensions (5.1.0)
-    ├── NuciSecurity.HMAC (4.1.2)
-    │   └── NuciExtensions (5.1.0)
-    ├── NuciExtensions (5.3.0)
-    ├── Microsoft.AspNetCore.Mvc.Core (2.3.9)
-    └── Microsoft.AspNetCore.WebUtilities (10.0.5)
+└── NuciAPI.Client (1.2.4)
+    ├── NuciAPI (3.6.2)
+    │   └── NuciSecurity.HMAC (4.1.4)
+    │       └── NuciExtensions (6.0.0)
+    ├── NuciSecurity.HMAC (4.1.4)
+    │   └── NuciExtensions (6.0.0)
+    ├── NuciExtensions (6.0.0)
+    └── Microsoft.AspNetCore.WebUtilities (10.0.13)
 ```
 
 ## Version Compatibility Notes
 
-- **NuciAPI.Client 1.2.2** requires **NuciAPI 3.4.0** and **NuciSecurity.HMAC 4.1.2**
-- **NuciSecurity.HMAC 4.1.2** requires **NuciExtensions 5.1.0**, but **NuciAPI.Client 1.2.2** also brings **NuciExtensions 5.3.0** (newer, compatible)
-- **Microsoft.Extensions.* 10.0.5** aligns with **net10.0** target framework
-- **Microsoft.AspNetCore.Mvc.Core 2.3.9** is an older version but compatible with net10.0 via compatibility shims
+- **NuciAPI.Client 1.2.4** requires **NuciAPI 3.6.2** and **NuciSecurity.HMAC 4.1.4**
+- **NuciSecurity.HMAC 4.1.4** requires **NuciExtensions 6.0.0**, matching the version brought by **NuciAPI.Client 1.2.4**
+- **Microsoft.Extensions.* 11.0.0** resolves against the **net10.0** target framework
+- **Microsoft.AspNetCore.WebUtilities 10.0.13**, brought transitively, is compatible with net10.0
 
 ## Security-Critical Dependencies
 
@@ -92,9 +90,9 @@ NuciNotifications.Client (net10.0)
 
 From `NuciNotifications.Client.csproj`:
 ```xml
-<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
-<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.5" />
-<PackageReference Include="NuciAPI.Client" Version="1.2.2" />
+<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="11.0.0" />
+<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="11.0.0" />
+<PackageReference Include="NuciAPI.Client" Version="1.2.4" />
 ```
 
 ## License Compatibility
@@ -114,10 +112,10 @@ From `NuciNotifications.Client.csproj`:
 
 | Dependency | Current | Latest (as of 2026) | Notes |
 |------------|---------|---------------------|-------|
-| Microsoft.Extensions.DependencyInjection.Abstractions | 10.0.5 | 10.x | Align with net10.0 |
-| Microsoft.Extensions.Options.ConfigurationExtensions | 10.0.5 | 10.x | Align with net10.0 |
-| NuciAPI.Client | 1.2.2 | Check NuGet | Breaking changes possible |
-| NuciAPI | 3.4.0 (transitive) | Check NuGet | Coupled with NuciAPI.Client |
-| NuciSecurity.HMAC | 4.1.2 (transitive) | Check NuGet | Coupled with NuciAPI |
+| Microsoft.Extensions.DependencyInjection.Abstractions | 11.0.0 | Check NuGet | Align with net10.0 |
+| Microsoft.Extensions.Options.ConfigurationExtensions | 11.0.0 | Check NuGet | Align with net10.0 |
+| NuciAPI.Client | 1.2.4 | Check NuGet | Breaking changes possible |
+| NuciAPI | 3.6.2 (transitive) | Check NuGet | Coupled with NuciAPI.Client |
+| NuciSecurity.HMAC | 4.1.4 (transitive) | Check NuGet | Coupled with NuciAPI |
 
 **Recommendation:** Update NuciAPI.Client and its transitive dependencies together to maintain compatibility.
