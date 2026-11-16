@@ -75,8 +75,11 @@ dotnet restore
 # Run all tests
 dotnet test NuciNotifications.Client.slnx
 
-# Run specific test suite
+# Run the unit test suite
 dotnet test NuciNotifications.Client.UnitTests/NuciNotifications.Client.UnitTests.csproj
+
+# Run the architecture and convention tests
+dotnet test NuciNotifications.Client.ArchitectureTests/NuciNotifications.Client.ArchitectureTests.csproj
 ```
 
 ### Documentation

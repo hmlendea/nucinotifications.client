@@ -31,7 +31,7 @@ namespace NuciNotifications.Client
         /// <param name="body">The body content of the email.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task SendEmail(
-            string senderName,
+            string? senderName,
             string recipient,
             string subject,
             string body);
@@ -46,10 +46,10 @@ namespace NuciNotifications.Client
         /// <param name="attachments">The ordered attachments, or null for no attachments.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task SendEmail(
-            string senderName,
+            string? senderName,
             string recipient,
             string subject,
             string body,
-            IEnumerable<EmailAttachmentRequest> attachments);
+            IEnumerable<EmailAttachmentRequest>? attachments);
     }
 }

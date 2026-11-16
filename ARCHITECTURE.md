@@ -220,6 +220,8 @@ Results are published to the [Security](https://github.com/hmlendea/nucinotifica
 
 The [unit-test project](NuciNotifications.Client.UnitTests/NuciNotifications.Client.UnitTests.csproj) uses NUnit, FluentAssertions, and Moq. Tests cover public overloads, settings binding, DTO validation, transport invocation, error translation, attachment limits, signing, tampering, and JSON round trips. Mock-based tests do not prove live API delivery, server payload limits, or deployed server compatibility.
 
+The [architecture-test project](NuciNotifications.Client.ArchitectureTests/NuciNotifications.Client.ArchitectureTests.csproj) uses NUnit, ArchUnit.NET, and Roslyn. It enforces the dependency boundaries, project and solution conventions, and C# source conventions on the production, unit-test, and architecture-test sources.
+
 Execute the principal automated verification with:
 
 ```bash
@@ -251,6 +253,7 @@ The settings helper does not register a notification client. Substitute implemen
 | Request contracts | [Requests directory](NuciNotifications.Client/Requests/) |
 | Configuration | [Configuration directory](NuciNotifications.Client/Configuration/) |
 | Verification | [Unit tests](NuciNotifications.Client.UnitTests/) |
+| Fitness rules | [Architecture tests](NuciNotifications.Client.ArchitectureTests/) |
 
 ## 📚 Related Documentation
 

@@ -272,6 +272,7 @@ Publishing a GitHub release activates both packaging workflows. They derive the 
 | Moq / FluentAssertions | 4.21.0 / 8.11.0 | Development | Mock transport and assertions |
 | Microsoft.NET.Test.Sdk | 18.11.0 | Development | Test execution |
 | Microsoft.Extensions.DependencyInjection | 10.0.13 | Development | Test service container |
+| Microsoft.CodeAnalysis.CSharp / TngTech.ArchUnitNET.NUnit | 5.9.0 / 0.13.5 | Development | Architecture source analysis and dependency rules |
 
 ## ⚙️ GitHub Actions
 
@@ -284,13 +285,14 @@ Publishing a GitHub release activates both packaging workflows. They derive the 
 
 ## 🗂️ Project Structure
 
-The [solution](NuciNotifications.Client.slnx) contains the library and its unit tests.
+The [solution](NuciNotifications.Client.slnx) contains the library, its architecture tests, and its unit tests.
 
 ### Projects and Packages
 
 | Project | Type | Purpose |
 |---------|------|---------|
 | [Client project](NuciNotifications.Client/NuciNotifications.Client.csproj) | .NET 10 library | Notification facade and request contracts |
+| [Architecture-test project](NuciNotifications.Client.ArchitectureTests/NuciNotifications.Client.ArchitectureTests.csproj) | NUnit fitness tests | Dependency boundaries, project/solution rules, source conventions |
 | [Unit-test project](NuciNotifications.Client.UnitTests/NuciNotifications.Client.UnitTests.csproj) | NUnit tests | Validation, signing, transport, and configuration checks |
 
 ### Directories
